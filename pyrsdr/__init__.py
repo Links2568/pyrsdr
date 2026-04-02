@@ -29,4 +29,4 @@ __all__ = [
     "canonical_angles", "canonical_angles_deg", "procrustes_align",
     "rsdr_cv", "rsdr_bootstrap",
 ]
-__version__ = "0.1.0"
+__version__ = "0.1.2"

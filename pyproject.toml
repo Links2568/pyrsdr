@@ -11,6 +11,7 @@ license = "MIT"
 requires-python = ">=3.9"
 authors = [
     {name = "Zuchen Li"},
+    {name = "Kerby Shedden"},
 ]
 keywords = ["dimension-reduction", "sufficient-dimension-reduction", "jax", "SIR", "distance-covariance"]
 classifiers = [

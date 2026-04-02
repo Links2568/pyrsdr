@@ -14,6 +14,8 @@ Reference:
 """
 from __future__ import annotations
 
+from functools import partial
+
 import jax
 import jax.numpy as jnp
 from jax import jit, value_and_grad
@@ -53,7 +55,7 @@ def compute_B_matrix(Y, alpha):
     return double_center(A)
 
 
-@jit(static_argnums=(1,))
+@partial(jit, static_argnums=(1,))
 def project_stiefel(M, d):
     """Retract onto St(p,d) via polar decomposition: M = U S V' -> U V'."""
     U, _, Vt = jnp.linalg.svd(M, full_matrices=False)

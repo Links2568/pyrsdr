@@ -211,6 +211,7 @@ class RSDR:
         verbose: bool = False,
         seed: int = 42,
         C_init: ArrayLike | None = None,
+        init: str = "random",
     ) -> "RSDR":
         """Fit RSDR via Riemannian CG on St(p, d).
 
@@ -222,16 +223,25 @@ class RSDR:
             seed: Random seed for Stiefel initialisation.
             C_init: Optional (p, d) initial point on St(p, d).
                     Use ``beta_to_C`` to convert from original-space directions.
+                    Overrides ``init`` if provided.
+            init: Initialisation strategy — ``"random"`` (default) or
+                  ``"sir"`` (use SIR directions as warm start).  For
+                  multivariate Y, SIR uses the first column of Y.
 
         Raises:
-            ValueError: If d < 1, d > p, or C_init has wrong shape.
+            ValueError: If d < 1, d > p, C_init has wrong shape, or
+                init is not "random"/"sir".
         """
+        from pyrsdr.sir import SIR
+
         n, p = self.n, self.p
 
         if d < 1:
             raise ValueError(f"d must be >= 1, got {d}")
         if d > p:
             raise ValueError(f"d must be <= p ({p}), got {d}")
+        if init not in ("random", "sir"):
+            raise ValueError(f"init must be 'random' or 'sir', got {init!r}")
 
         Z, B, alpha, eta = self.Z, self.B, self.alpha, self.eta
 
@@ -242,6 +252,16 @@ class RSDR:
                 raise ValueError(f"C_init shape {C.shape} != ({p}, {d})")
             U, _, Vt = jnp.linalg.svd(C, full_matrices=False)
             C = U @ Vt
+        elif init == "sir":
+            import numpy as _np
+            X_np = _np.asarray(self.X_orig)
+            Y_np = _np.asarray(self.Y)
+            y_sir = Y_np[:, 0] if Y_np.shape[1] > 1 else Y_np.ravel()
+            sir = SIR()
+            sir.fit(X_np, y_sir, ndir=d)
+            C = self.beta_to_C(sir.dirs)
+            if verbose:
+                print(f"SIR init: using SIR directions as warm start")
         else:
             key = jax.random.PRNGKey(seed)
             M = jax.random.normal(key, (p, d), dtype=jnp.float64)

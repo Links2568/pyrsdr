@@ -96,6 +96,7 @@ def rsdr_cv(
     eval_alpha: float = EVAL_ALPHA,
     seed: int = 42,
     verbose: bool = False,
+    init: str = "random",
 ) -> dict:
     """K-fold cross-validation for selecting alpha in RSDR.
 
@@ -131,6 +132,9 @@ def rsdr_cv(
         Controls both fold assignment and RSDR initialisation.
     verbose : bool
         Print per-fold and per-alpha summaries.
+    init : str
+        Initialisation strategy for each RSDR fit — ``"random"`` (default)
+        or ``"sir"`` (SIR warm start).
 
     Returns
     -------
@@ -199,7 +203,7 @@ def rsdr_cv(
             # Train with candidate alpha
             model = RSDR(X_train, Y_train, alpha=alpha, eta=eta)
             model.fit(d=d, maxiter=maxiter, tol=tol,
-                      seed=seed + k, verbose=False)
+                      seed=seed + k, verbose=False, init=init)
 
             # Validate with fixed eval_alpha
             cost_k = _validation_cost(model, X_test, Y_test,
@@ -247,6 +251,7 @@ def rsdr_bootstrap(
     eval_alpha: float = EVAL_ALPHA,
     seed: int = 42,
     verbose: bool = False,
+    init: str = "random",
 ) -> dict:
     """Out-of-bag bootstrap selection of alpha for RSDR.
 
@@ -273,7 +278,7 @@ def rsdr_bootstrap(
         Number of bootstrap replicates (default 50).
     eval_alpha : float
         Alpha used for computing validation cost (default 0.5).
-    maxiter, tol, eta, seed, verbose
+    maxiter, tol, eta, seed, verbose, init
         Passed through to RSDR (see :func:`rsdr_cv`).
 
     Returns
@@ -332,7 +337,7 @@ def rsdr_bootstrap(
 
             model = RSDR(X_train, Y_train, alpha=alpha, eta=eta)
             model.fit(d=d, maxiter=maxiter, tol=tol,
-                      seed=seed + b, verbose=False)
+                      seed=seed + b, verbose=False, init=init)
 
             cost_b = _validation_cost(model, X_oob, Y_oob,
                                       eval_alpha=eval_alpha)
